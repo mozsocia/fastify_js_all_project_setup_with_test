@@ -6,11 +6,7 @@ const productRoutes = require('./routes/productRoutes');
 
 // Register plugins
 fastify.register(cors, { origin: '*' });
-fastify.register(formDataParser, {
-  limits: {
-    fileSize: 5 * 1024 * 1024 // 5MB limit
-  }
-})
+fastify.register(formDataParser)
 
 // Connect to MongoDB
 mongoose.connect('mongodb://127.0.0.1:27017/test1')

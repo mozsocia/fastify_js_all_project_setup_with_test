@@ -39,7 +39,7 @@ const createProduct = async (req, reply) => {
     reply.code(201).send({ message: 'Product created successfully', product })
   } catch (error) {
     console.error('Error creating product:', error)
-    reply.code(500).send({ error: 'Internal server error' })
+    reply.code(500).send({ error: 'Internal server error' , error})
   }
 }
 
