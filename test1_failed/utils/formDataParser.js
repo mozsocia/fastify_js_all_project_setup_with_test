@@ -1,42 +1,66 @@
 const fp = require('fastify-plugin')
-const multipart = require('@fastify/multipart')
+const Busboy = require('@fastify/busboy')
+const util = require('util')
+const fs = require('fs')
+const path = require('path')
+const os = require('os')
 
-async function formDataParser(fastify, options) {
-  fastify.register(multipart, {
-    limits: {
-      fieldNameSize: 100, // Max field name size in bytes
-      fieldSize: 1000000, // Max field value size in bytes
-      fields: 10,         // Max number of non-file fields
-      fileSize: 100000000, // For multipart forms, the max file size in bytes
-      files: 10,          // Max number of file fields
-      headerPairs: 2000   // Max number of header key=>value pairs
-    }
+const pipeline = util.promisify(require('stream').pipeline)
+
+async function uploadPlugin(fastify, options) {
+  const {
+    limits = {},
+    fileFilter = () => true,
+    tempDir = os.tmpdir(),
+  } = options
+
+  fastify.addContentTypeParser('multipart/form-data', (request, payload, done) => {
+    done()
   })
 
   fastify.addHook('preHandler', async (request, reply) => {
-    const contentType = request.headers['content-type'] || ''
-    
-    if (contentType.includes('multipart/form-data')) {
-      const data = await request.parts()
-      request.body = {}
-      request.uploads = {}
+    if (request.headers['content-type'] && request.headers['content-type'].startsWith('multipart/form-data')) {
+      const busboy = new Busboy({ headers: request.headers, limits })
+      const fields = {}
+      const files = {}
 
-      for await (const part of data) {
-        if (part.file) {
-          request.uploads[part.fieldname] = {
-            filename: part.filename,
-            mimetype: part.mimetype,
-            file: part.file
-          }
-        } else {
-          request.body[part.fieldname] = part.value
+      busboy.on('field', (fieldname, val) => {
+        fields[fieldname] = val
+      })
+
+      busboy.on('file', (fieldname, file, filename, encoding, mimetype) => {
+        if (!fileFilter(filename, mimetype)) {
+          return file.resume()
         }
+
+        const saveTo = path.join(tempDir, `${Date.now()}-${filename}`)
+        files[fieldname] = {
+          filename,
+          encoding,
+          mimetype,
+          file,
+          path: saveTo
+        }
+        pipeline(file, fs.createWriteStream(saveTo))
+      })
+
+      request.body = new Promise((resolve, reject) => {
+        busboy.on('finish', () => {
+          resolve({ ...fields, files })
+        })
+        busboy.on('error', reject)
+        request.raw.pipe(busboy)
+      })
+
+      try {
+        request.body = await request.body
+      } catch (err) {
+        reply.code(400).send({ error: 'File upload failed' })
       }
     }
-    // If it's not multipart/form-data, Fastify will parse JSON automatically
   })
 }
 
-module.exports = fp(formDataParser, {
-  name: 'formDataParser'
+module.exports = fp(uploadPlugin, {
+  name: 'fastify-easy-multipart'
 })

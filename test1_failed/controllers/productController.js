@@ -2,7 +2,8 @@ const Product = require('../models/product');
 const { saveFile } = require('../utils/fileUpload');
 
 const createProduct = async (req, reply) => {
-  // console.log(req.body.files.image1)
+  console.log(req.body)  // Contains form fields
+  console.log(req.files) // Contains uploaded files
   try {
     const data = req.body;
     // data.image1 = await saveFile(req.uploads.image1);
@@ -13,7 +14,7 @@ const createProduct = async (req, reply) => {
 
     
 
-    reply.code(201).send({...req.body,...req.uploads});
+    reply.code(201).send("yes");
   } catch (error) {
     console.log(error)
     reply.code(500).send({ error: 'Internal Server Error' });
