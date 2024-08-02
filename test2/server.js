@@ -3,10 +3,14 @@ const mongoose = require('mongoose');
 const cors = require('@fastify/cors');
 const formDataParser = require('./utils/formDataParser');
 const productRoutes = require('./routes/productRoutes');
+const errorHandler = require('./utils/errorHandler');
 
 // Register plugins
 fastify.register(cors, { origin: '*' });
 fastify.register(formDataParser)
+
+// Global error handler
+fastify.setErrorHandler(errorHandler);
 
 // Connect to MongoDB
 mongoose.connect('mongodb://127.0.0.1:27017/test1')
