@@ -4,6 +4,7 @@ const cors = require('@fastify/cors');
 const formDataParser = require('./utils/formDataParser');
 const productRoutes = require('./routes/productRoutes');
 const errorHandler = require('./utils/errorHandler');
+const { createError } = require('./errors');
 
 // Register plugins
 fastify.register(cors, { origin: '*' });

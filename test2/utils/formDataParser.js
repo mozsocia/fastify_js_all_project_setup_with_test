@@ -18,7 +18,7 @@ async function uploadPlugin(fastify, options) {
     done()
   })
 
-  fastify.addHook('preHandler', async (request,  ) => {
+  fastify.addHook('preHandler', async (request, reply) => {
     if (request.headers['content-type'] && request.headers['content-type'].startsWith('multipart/form-data')) {
       const busboy = new Busboy({ 
         headers: request.headers, 

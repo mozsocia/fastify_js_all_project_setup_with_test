@@ -1,17 +1,13 @@
-const errorHandler = (error, request, reply) => {
-  const statusCode = error.statusCode || 500;
-  const errorResponse = {
-    status: 'error',
-    code: statusCode,
-    message: error.message || 'Internal Server Error',
-  };
+const { BaseError } = require('../errors');
 
-  if (process.env.NODE_ENV !== 'production') {
-    errorResponse.stack = error.stack;
+function errorHandler(error, request, reply) {
+  console.error('Error occurred:', error);
+
+  if (error instanceof BaseError) {
+    reply.status(error.statusCode).send({ error: error.message });
+  } else {
+    reply.status(500).send({ error: 'Internal Server Error' });
   }
-
-  request.log.error(error);
-  reply.status(statusCode).send(errorResponse);
-};
+}
 
 module.exports = errorHandler;
