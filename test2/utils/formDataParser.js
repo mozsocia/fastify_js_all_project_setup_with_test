@@ -2,10 +2,10 @@ const fp = require('fastify-plugin')
 const Busboy = require('@fastify/busboy')
 
 const defaultLimits = {
-  fileSize: 1 * 1024 * 1024, // 1MB
+  fileSize: 10 * 1024 * 1024, // 1MB
   files: 10,
   fields: 10,
-  parts: 11, // files + fields
+  parts: 100, // files + fields
 };
 
 async function uploadPlugin(fastify, options) {
@@ -88,7 +88,7 @@ async function uploadPlugin(fastify, options) {
           if (!reply.sent) {
             try {
               await Promise.all(filePromises)
-              resolve({ ...fields, files })
+              resolve({ ...fields, ...files })
             } catch (err) {
               reject(err)
             }
