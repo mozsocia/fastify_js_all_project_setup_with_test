@@ -1,18 +1,11 @@
 // utils/validationUtils.js
-
+const { ValidationError } = require('../errors');
 const Ajv = require('ajv');
 const addErrors = require('ajv-errors');
 
 const ajv = new Ajv({ allErrors: true });
 addErrors(ajv);
 
-class ValidationError extends Error {
-  constructor(errors) {
-    super('Validation failed');
-    this.name = 'ValidationError';
-    this.errors = errors;
-  }
-}
 
 const createValidator = (schema) => {
   const validate = ajv.compile(schema);

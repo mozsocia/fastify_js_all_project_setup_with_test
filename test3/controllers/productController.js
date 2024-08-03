@@ -23,7 +23,7 @@ const productSchema = {
     required: {
       title: 'Title is required',
       description: 'Description is required',
-      image1: 'Image1 is required',
+      image1: 'Image1 is require d',
       docs: 'Docs is required',
     },
     _: 'Invalid product data structure'
@@ -35,43 +35,31 @@ const validateProduct = createValidator(productSchema);
 
 const createProduct = async (req, reply) => {
   console.log(req.body);  // Contains form fields
+  // Validate the request body
+  validateProduct(req.body);
 
-  try {
+  const { title, description } = req.body;
 
-    // Validate the request body
-    validateProduct(req.body);
+  // Save image1
+  const image1File = req.body.image1;
+  const image1FileName = await saveFile(image1File);
 
-    const { title, description } = req.body;
+  // Save docs
+  const docsFile = req.body.docs;
+  const docsFileName = await saveFile(docsFile);
 
-    // Save image1
-    const image1File = req.body.image1;
-    const image1FileName = await saveFile(image1File);
+  // Create and save the product
+  const product = new Product({
+    title,
+    description,
+    image1: image1FileName,
+    docs: docsFileName,
+  });
 
-    // Save docs
-    const docsFile = req.body.docs;
-    const docsFileName = await saveFile(docsFile);
+  await product.save();
 
-    // Create and save the product
-    const product = new Product({
-      title,
-      description,
-      image1: image1FileName,
-      docs: docsFileName,
-    });
+  reply.code(201).send({ message: 'Product created successfully', product });
 
-    await product.save();
-
-    reply.code(201).send({ message: 'Product created successfully', product });
-  } catch (error) {
-    if (error instanceof ValidationError) {
-      return reply.code(400).send({
-        error: 'Validation failed',
-        details: error.errors
-      });
-    }
-    console.error('Error creating product:', error);
-    reply.code(500).send({ error: 'Internal server error', message: error.message });
-  }
 };
 
 
