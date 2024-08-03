@@ -1,6 +1,6 @@
 const Product = require('../models/product');
 const { saveFile } = require('../utils/fileUtils');
-const { createValidator } = require('../utils/validationUtils');
+const { createValidator ,ValidationError } = require('../utils/validationUtils');
 
 // Define the schema for product creation with custom error messages
 const productSchema = {
@@ -13,6 +13,13 @@ const productSchema = {
   },
   required: ['title', 'description', 'image1', 'docs'],
   errorMessage: {
+    properties: {
+      title: 'Title should not be empty',
+      description: 'Description should not be empty',
+      image1: 'Image1 object is required',
+      docs: 'Docs object is required'
+
+    },
     required: {
       title: 'Title is required',
       description: 'Description is required',
@@ -32,13 +39,7 @@ const createProduct = async (req, reply) => {
   try {
 
     // Validate the request body
-    const validation = validateProduct(req.body);
-    if (!validation.valid) {
-      return reply.code(400).send({
-        error: 'Validation failed',
-        details: validation.errors
-      });
-    }
+    validateProduct(req.body);
 
     const { title, description } = req.body;
 
@@ -62,8 +63,14 @@ const createProduct = async (req, reply) => {
 
     reply.code(201).send({ message: 'Product created successfully', product });
   } catch (error) {
+    if (error instanceof ValidationError) {
+      return reply.code(400).send({ 
+        error: 'Validation failed', 
+        details: error.errors 
+      });
+    }
     console.error('Error creating product:', error);
-    reply.code(500).send({ error: 'Internal server error', error });
+    reply.code(500).send({ error: 'Internal server error', message: error.message });
   }
 };
 

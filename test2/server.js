@@ -1,4 +1,4 @@
-const fastify = require('fastify')({ logger: true });
+const fastify = require('fastify')({ logger: false });
 const mongoose = require('mongoose');
 const cors = require('@fastify/cors');
 const formDataParser = require('./utils/formDataParser');
